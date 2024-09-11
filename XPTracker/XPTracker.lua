@@ -24,7 +24,7 @@ local skillIcons = {}
 
 -- Create UI panel
 local panel = CreateFrame("Frame", "XPTrackerPanel", UIParent)
-panel:SetSize(240, 100) -- Increased size for better display
+panel:SetSize(260, 100) -- Increased size for better display
 panel:SetPoint("CENTER", 200, 200)
 panel:SetBackdrop({
     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
