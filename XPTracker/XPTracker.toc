@@ -1,0 +1,7 @@
+## Interface: 30300
+## Title: XP Tracker
+## Notes: Tracks XP gained per hour and displays it on a UI panel.
+## Version: 1.0
+## Author: [Your Name]
+
+XPTracker.lua
