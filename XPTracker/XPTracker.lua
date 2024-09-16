@@ -20,11 +20,10 @@ local margin = 20 -- Margin between text and window edges
 local updateInterval = 5 -- Time in seconds to update XP/hour
 local lastUpdate = 0
 local xpPerHourData = {}
-local skillIcons = {}
 
 -- Create UI panel
 local panel = CreateFrame("Frame", "XPTrackerPanel", UIParent)
-panel:SetSize(260, 100) -- Increased size for better display
+panel:SetSize(240, 100) -- Increased size for better display
 panel:SetPoint("CENTER", 200, 200)
 panel:SetBackdrop({
     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
@@ -81,13 +80,13 @@ local function UpdateTrackingData()
         end
         dynamicSkillXPTexts[skill]:SetPoint("TOPLEFT", previousText, "BOTTOMLEFT", 0, -lineSpacing)
 
-        -- Format XP/hour as integer and handle zero values
-        local xpPerHour = xpPerHourData[skill] or 0
-        xpPerHour = xpPerHour > 0 and math.floor(xpPerHour + 0.5) or 0 -- Round to nearest integer
-        local totalXP = data.totalXP
-        local skillIcon = skillIcons[skill] or ""
+        -- Calculate XP/hour based on total XP and elapsed time
+        local xpPerHour = 0
+        if data.totalXP > 0 and elapsed > 0 then
+            xpPerHour = data.totalXP / elapsed
+        end
 
-        dynamicSkillXPTexts[skill]:SetText(format("|T%s:16|t    %s: %d XP/hr (%d)", skillIcon, skill, xpPerHour, totalXP))
+        dynamicSkillXPTexts[skill]:SetText(format("%s: %d XP/hr (%d)", skill, math.floor(xpPerHour + 0.5), data.totalXP))
         dynamicSkillXPTexts[skill]:Show()
         previousText = dynamicSkillXPTexts[skill]
         numberOfSkills = numberOfSkills + 1
@@ -105,9 +104,9 @@ local function PeriodicUpdate()
     if (currentTime - lastUpdate) >= updateInterval then
         -- Update XP/hour for each skill
         for skill, data in pairs(sessionSkillXP) do
-            local elapsed = (currentTime - data.lastXPTime) / 3600  -- time in hours
+            local elapsed = (currentTime - startTime) / 3600  -- time in hours
             if elapsed > 0 then
-                xpPerHourData[skill] = data.gainedXP / elapsed
+                xpPerHourData[skill] = data.totalXP / elapsed
             end
         end
         UpdateTrackingData()
@@ -120,7 +119,6 @@ local function ResetSession()
     startTime = time()
     sessionSkillXP = {}
     xpPerHourData = {} -- Clear XP/hr data
-    skillIcons = {}
     skillXPText:SetText("") -- Remove placeholder text
     print("Session reset. Start time: ", startTime)
 end
@@ -137,22 +135,16 @@ XPTracker:SetScript("OnEvent", function(self, event, ...)
     else
         -- Track skill XP gains via chat messages
         if message and string.find(message, "experience increased by") then
-            --print("Found 'experience increased by' in the message.")
-            -- Extract skill name, icon, and XP amount
-            local icon, skill, xpGained = string.match(message, "|T(.-)|t ([%a%s]+) experience increased by (%d+)")
-            if skill and xpGained then
-                -- Remove leading 't' if present
-                skill = string.gsub(skill, "^t", "")
+            -- Extract everything before "experience increased by" (including icon)
+            local skillWithIcon, xpGained = string.match(message, "^(.-) experience increased by (%d+)")
+            if skillWithIcon and xpGained then
                 -- Initialize skill data if not present
-                if not sessionSkillXP[skill] then
-                    sessionSkillXP[skill] = { gainedXP = 0, totalXP = 0, lastXPTime = time() }
+                if not sessionSkillXP[skillWithIcon] then
+                    sessionSkillXP[skillWithIcon] = { gainedXP = 0, totalXP = 0, lastXPTime = time() }
                 end
-                sessionSkillXP[skill].gainedXP = sessionSkillXP[skill].gainedXP + tonumber(xpGained)
-                sessionSkillXP[skill].totalXP = sessionSkillXP[skill].totalXP + tonumber(xpGained)
-                sessionSkillXP[skill].lastXPTime = time() -- Update last XP time
-
-                -- Store the icon
-                skillIcons[skill] = icon
+                sessionSkillXP[skillWithIcon].gainedXP = sessionSkillXP[skillWithIcon].gainedXP + tonumber(xpGained)
+                sessionSkillXP[skillWithIcon].totalXP = sessionSkillXP[skillWithIcon].totalXP + tonumber(xpGained)
+                sessionSkillXP[skillWithIcon].lastXPTime = time() -- Update last XP time
 
                 -- Immediate update for XP display
                 UpdateTrackingData()
@@ -169,7 +161,7 @@ XPTracker:SetScript("OnUpdate", function(self, elapsed)
 end)
 
 -- Slash command to toggle UI panel visibility
-SLASH_XPTRACKER1 = "/xptracker"
+SLASH_XPTRACKER1 = "/xptrack"
 SlashCmdList["XPTRACKER"] = function()
     if panel:IsShown() then
         panel:Hide()
