@@ -26,17 +26,27 @@ local panel = CreateFrame("Frame", "XPTrackerPanel", UIParent)
 panel:SetSize(240, 100) -- Increased size for better display
 panel:SetPoint("CENTER", 200, 200)
 panel:SetBackdrop({
-    bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-    edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+    
+-- Lines to use Wow UI Dialog for background and boarder 
+	--bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+    --edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+--WORS Custom background 
+	bgFile = "Interface\WORS\OldSchoolBackground2",
+	edgeFile = "Interface\\WORS\\OldSchool-Dialog-Border",
+	
     tile = true, tileSize = 32, edgeSize = 32,
     insets = { left = 11, right = 12, top = 12, bottom = 11 }
 })
-panel:SetBackdropColor(0, 0, 0, 1)
+--panel:SetBackdropColor(0, 0, 0, 1)
 panel:EnableMouse(true)
 panel:SetMovable(true)
 panel:RegisterForDrag("LeftButton")
 panel:SetScript("OnDragStart", panel.StartMoving)
 panel:SetScript("OnDragStop", panel.StopMovingOrSizing)
+
+panel.bg = panel:CreateTexture(nil, "BACKGROUND")
+panel.bg:SetAllPoints(true)
+panel.bg:SetColorTexture(62/255, 53/255, 41/255, 1)
 
 -- Title for the panel
 local panelTitle = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
@@ -97,6 +107,24 @@ local function UpdateTrackingData()
     local panelHeight = math.max(contentHeight, 150)  -- Ensure minimum height
     panel:SetHeight(panelHeight)
 end
+
+--Button reset timer
+local button = CreateFrame("Button", "ButtonResetXPTracker", UIParent)
+button:SetParent(XPTrackerPanel)
+button:SetSize(19 ,19) -- width, height
+button:SetText("X")
+button:SetPoint("TOP", -85, -20)
+button:SetNormalTexture("Interface\\SpellIcons\\unarmedblock")
+button:SetHighlightTexture("Interface\\SpellIcons\\unarmedblock")
+button:GetHighlightTexture():SetAlpha(0.5)
+button:SetScript("OnClick", function()
+    startTime = time()
+    sessionSkillXP = {}
+    xpPerHourData = {} -- Clear XP/hr data
+    skillXPText:SetText("") -- Remove placeholder text
+    print("Session reset. Start time: ", startTime)
+    UpdateTrackingData() --Update screen
+end)
 
 -- Periodic update function
 local function PeriodicUpdate()
