@@ -1,0 +1,7 @@
+## Interface: 30300
+## Title: XP Tracker
+## Notes: Tracks experience gains and displays XP per hour for skills.
+## Author: YourName
+## Version: 1.0
+
+XPTracker.lua
