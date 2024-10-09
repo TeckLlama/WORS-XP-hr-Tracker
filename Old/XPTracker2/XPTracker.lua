@@ -25,20 +25,28 @@ local xpPerHourData = {}
 local panel = CreateFrame("Frame", "XPTrackerPanel", UIParent)
 panel:SetSize(240, 100) -- Increased size for better display
 panel:SetPoint("CENTER", 200, 200)
-
 panel:SetBackdrop({
-    bgFile = "Interface\\WORS\\OldSchoolBackground2",
-    edgeFile = "Interface\\WORS\\OldSchool-Dialog-Border",
-    tile = false, tileSize = 32, edgeSize = 32,
-    insets = { left = 5, right = 6, top = 6, bottom = 5 }
+    
+-- Lines to use Wow UI Dialog for background and boarder 
+	--bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+    --edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+--WORS Custom background 
+	bgFile = "Interface\WORS\OldSchoolBackground2",
+	edgeFile = "Interface\\WORS\\OldSchool-Dialog-Border",
+	
+    tile = true, tileSize = 32, edgeSize = 32,
+    insets = { left = 11, right = 12, top = 12, bottom = 11 }
 })
-
 --panel:SetBackdropColor(0, 0, 0, 1)
 panel:EnableMouse(true)
 panel:SetMovable(true)
 panel:RegisterForDrag("LeftButton")
 panel:SetScript("OnDragStart", panel.StartMoving)
 panel:SetScript("OnDragStop", panel.StopMovingOrSizing)
+
+panel.bg = panel:CreateTexture(nil, "BACKGROUND")
+panel.bg:SetAllPoints(true)
+panel.bg:SetColorTexture(62/255, 53/255, 41/255, 1)
 
 -- Title for the panel
 local panelTitle = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
@@ -104,7 +112,7 @@ end
 local button = CreateFrame("Button", "ButtonResetXPTracker", UIParent)
 button:SetParent(XPTrackerPanel)
 button:SetSize(19 ,19) -- width, height
---button:SetText("X")
+button:SetText("X")
 button:SetPoint("TOP", -85, -20)
 button:SetNormalTexture("Interface\\SpellIcons\\unarmedblock")
 button:SetHighlightTexture("Interface\\SpellIcons\\unarmedblock")
@@ -189,50 +197,3 @@ SlashCmdList["XPTRACKER"] = function()
         panel:Show()
     end
 end
-
---Minimap Icon using LibDBIcon and Ace3
-local addon = LibStub("AceAddon-3.0"):NewAddon("XpTracker")
-XpTrackerMinimapButton = LibStub("LibDBIcon-1.0", true)
-
-local miniButton = LibStub("LibDataBroker-1.1"):NewDataObject("XpTracker", {
-	type = "data source",
-	text = "XpTracker",
-	icon = "Interface\\SpellIcons\\unarmedblock",
-	OnClick = function(self, btn)
-        if btn == "LeftButton" then
-		    if panel:IsShown() then
-				panel:Hide()
-			else
-				panel:Show()
-			end
-        elseif btn == "RightButton" then
-            if settingsFrame:IsShown() then
-                settingsFrame:Hide()
-            else
-                settingsFrame:Show()
-            end
-        end
-	end,
-
-	OnTooltipShow = function(tooltip)
-		if not tooltip or not tooltip.AddLine then
-			return
-		end
-
-		tooltip:AddLine("Experience Tracker\n\nLeft-click: Toggle XP Tracker", nil, nil, nil, nil)
-	end,
-})
-
-function addon:OnInitialize()
-	self.db = LibStub("AceDB-3.0"):New("MyAddonMinimapPOS", {
-		profile = {
-			minimap = {
-				hide = false,
-			},
-		},
-	})
-
-	XpTrackerMinimapButton:Register("XpTracker", miniButton, self.db.profile.minimap)
-end
-
-XpTrackerMinimapButton:Show("XpTracker")
